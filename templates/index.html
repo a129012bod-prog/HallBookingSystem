@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>نظام حجز القاعات والمعامل</title>
+    <!-- استيراد خط تجوال وتصميم عصري -->
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --bg-color: #f8f9fa;
+            --card-bg: #ffffff;
+            --text-color: #333333;
+            --header-bg: linear-gradient(135deg, #0d6efd, #0dcaf0);
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            --border-color: #dee2e6;
+        }
+
+        [data-theme="dark"] {
+            --bg-color: #121212;
+            --card-bg: #1e1e1e;
+            --text-color: #f1f1f1;
+            --header-bg: linear-gradient(135deg, #1f1f1f, #2d2d2d);
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.5);
+            --border-color: #333333;
+        }
+
+        body {
+            font-family: 'Tajawal', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            transition: background 0.3s, color 0.3s;
+        }
+
+        header {
+            background: var(--header-bg);
+            color: white;
+            padding: 20px;
+            text-align: center;
+            box-shadow: var(--shadow);
+            position: relative;
+        }
+
+        .theme-toggle {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 50px;
+            cursor: pointer;
+            font-family: 'Tajawal', sans-serif;
+            font-weight: 500;
+            transition: background 0.2s;
+        }
+
+        .theme-toggle:hover {
+            background: rgba(255, 255, 255, 0.4);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 30px auto;
+            padding: 0 20px;
+            flex: 1;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 20px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            transition: transform 0.2s;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .card-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+            margin: 0;
+        }
+
+        /* الألوان المطلوبة للحالة */
+        .badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: bold;
+            color: white;
+        }
+
+        .badge.available {
+            background-color: #198754; /* أخضر */
+        }
+
+        .badge.booked {
+            background-color: #dc3545; /* أحمر */
+        }
+
+        .card-body {
+            margin-bottom: 15px;
+            font-size: 0.95rem;
+        }
+
+        .form-group {
+            margin-bottom: 10px;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-color);
+            color: var(--text-color);
+            box-sizing: border-box;
+            font-family: 'Tajawal', sans-serif;
+        }
+
+        button.book-btn {
+            width: 100%;
+            padding: 10px;
+            background-color: #0d6efd;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 700;
+            cursor: pointer;
+            font-family: 'Tajawal', sans-serif;
+            transition: background-color 0.2s;
+        }
+
+        button.book-btn:hover {
+            background-color: #0b5ed7;
+        }
+
+        button.book-btn:disabled {
+            background-color: #6c757d;
+            cursor: not-allowed;
+        }
+
+        footer {
+            background: var(--card-bg);
+            text-align: center;
+            padding: 20px;
+            border-top: 1px solid var(--border-color);
+            margin-top: auto;
+        }
+
+        .creators {
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .motivation {
+            color: #6c757d;
+            font-style: italic;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body data-theme="light">
+
+    <header>
+        <button class="theme-toggle" onclick="toggleTheme()"><i class="fa-solid fa-moon"></i> تغيير الثيم</button>
+        <h1><i class="fa-solid fa-building-columns"></i> نظام حجز القاعات والمعامل</h1>
+        <p>احجز قاعتك أو معملك المفضل بكل سهولة ويسر</p>
+    </header>
+
+    <div class="container" id="rooms-container">
+        <!-- سيتم تعبئة القاعات ديناميكياً بواسطة الجافاسكريبت -->
+    </div>
+
+    <footer>
+        <div class="creators">إعداد المتدربين: عبدالرحمن و إياد و وسيم و زياد</div>
+        <div class="motivation">"النجاح ليس قسماً محظوظاً، بل هو ثمرة جهد وعمل مستمر، استمر في التقدم فكل خطوة تقربك من هدفك!"</div>
+    </footer>
+
+    <script>
+        // دالة تبديل الثيم (مظلم / فاتح)
+        function toggleTheme() {
+            const body = document.body;
+            const currentTheme = body.getAttribute('data-theme');
+            if (currentTheme === 'light') {
+                body.setAttribute('data-theme', 'dark');
+            } else {
+                body.setAttribute('data-theme', 'light');
+            }
+        }
+
+        // جلب وتحديث القاعات
+        async function fetchRooms() {
+            try {
+                const response = await fetch('/api/rooms');
+                const rooms = await response.json();
+                renderRooms(rooms);
+            } catch (error) {
+                console.error('خطأ في جلب البيانات:', error);
+            }
+        }
+
+        // عرض القاعات في الصفحة
+        function renderRooms(rooms) {
+            const container = document.getElementById('rooms-container');
+            container.innerHTML = '';
+
+            rooms.forEach(room => {
+                const isBooked = room.status === 'محجوز';
+                const badgeClass = isBooked ? 'badge booked' : 'badge available';
+
+                const card = document.createElement('div');
+                card.className = 'card';
+                card.innerHTML = `
+                    <div>
+                        <div class="card-header">
+                            <h3 class="card-title">${room.name}</h3>
+                            <span class="${badgeClass}">${room.status}</span>
+                        </div>
+                        <div class="card-body">
+                            <p><strong>النوع:</strong> ${room.type}</p>
+                            ${isBooked ? `<p><strong>محجوز بواسطة:</strong> ${room.booked_by}</p>` : ''}
+                        </div>
+                    </div>
+                    <div>
+                        ${!isBooked ? `
+                            <div class="form-group">
+                                <input type="text" id="name-${room.id}" placeholder="اكتب اسمك هنا للحجز...">
+                            </div>
+                            <button class="book-btn" onclick="bookRoom(${room.id})">تأكيد الحجز</button>
+                        ` : `
+                            <button class="book-btn" disabled>محجوز بالكامل</button>
+                        `}
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        // إرسال طلب الحجز
+        async function bookRoom(roomId) {
+            const nameInput = document.getElementById(`name-${roomId}`);
+            const userName = nameInput.value.trim();
+
+            if (!userName) {
+                alert('الرجاء كتابة اسمك قبل الضغط على زر الحجز!');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/book', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ room_id: roomId, user_name: userName })
+                });
+
+                const result = await response.json();
+                if (response.ok) {
+                    alert(result.message);
+                    fetchRooms(); // تحديث الحالة فوراً
+                } else {
+                    alert(result.message);
+                }
+            } catch (error) {
+                console.error('حدث خطأ:', error);
+            }
+        }
+
+        // تحميل البيانات عند فتح الصفحة
+        fetchRooms();
+    </script>
+</body>
+</html>
