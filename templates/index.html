@@ -164,16 +164,28 @@
             localStorage.setItem('theme', currentTheme);
         }
 
-        // 2. بيانات الـ 15 قاعة مع السعة والصورة
+        // 2. صور متنوعة وحقيقية لقاعات الاجتماعات والمؤتمرات
+        const hallImages = [
+            "https://images.unsplash.com/photo-1517502884422-41eaead166d4?auto=format&fit=crop&w=600&q=80",
+            "https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=600&q=80",
+            "https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=600&q=80",
+            "https://images.unsplash.com/photo-1543269865-cbf427effbad?auto=format&fit=crop&w=600&q=80",
+            "https://images.unsplash.com/photo-1531482615713-2afd69097998?auto=format&fit=crop&w=600&q=80",
+            "https://images.unsplash.com/photo-1497215728101-856f4ea42174?auto=format&fit=crop&w=600&q=80",
+            "https://images.unsplash.com/photo-1577495508048-b635879837f1?auto=format&fit=crop&w=600&q=80",
+            "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?auto=format&fit=crop&w=600&q=80"
+        ];
+
+        // 3. بيانات الـ 15 قاعة مع ربطها بصور القاعات الحقيقية
         const roomsData = Array.from({ length: 15 }, (_, i) => ({
             id: i + 1,
             name: `قاعة رقم ${i + 1}`,
             floor: `الطابق ${Math.floor(i / 5) + 1}`,
             capacity: `${(i % 3 + 1) * 15} شخص`,
-            image: `https://picsum.photos/seed/hall${i + 1}/300/200`
+            image: hallImages[i % hallImages.length]
         }));
 
-        // 3. جلب الحجوزات من localStorage
+        // 4. جلب الحجوزات من localStorage
         let bookings = JSON.parse(localStorage.getItem('hallBookings')) || {};
 
         function renderRooms() {
@@ -197,10 +209,14 @@
                                 ${isBooked ? 'محجوزة' : 'متاحة'}
                             </span>
                         </p>
-                        ${isBooked ? `<p>⏱️ <strong>الوقت:</strong> ${bookingInfo.time}</p>` : ''}
+                        ${isBooked ? `
+                            <p>👤 <strong>المستأجر:</strong> ${bookingInfo.name}</p>
+                            <p>⏱️ <strong>الوقت:</strong> ${bookingInfo.time}</p>
+                        ` : ''}
                     </div>
                     <div class="actions">
                         ${!isBooked ? `
+                            <input type="text" id="name-${room.id}" placeholder="اكتب اسم المستأجر">
                             <input type="text" id="time-${room.id}" placeholder="حدد وقت الحجز (مثلاً: 10 - 12 صباحاً)">
                             <button class="btn btn-book" onclick="bookRoom(${room.id})">تأكيد الحجز</button>
                         ` : `
@@ -212,22 +228,25 @@
             });
         }
 
-        // 4. تأكيد الحجز
+        // 5. تأكيد الحجز
         function bookRoom(roomId) {
-            const input = document.getElementById(`time-${roomId}`);
-            const timeValue = input.value.trim();
+            const nameInput = document.getElementById(`name-${roomId}`);
+            const timeInput = document.getElementById(`time-${roomId}`);
+            
+            const nameValue = nameInput.value.trim();
+            const timeValue = timeInput.value.trim();
 
-            if (!timeValue) {
-                alert('الرجاء كتابة وقت الحجز أولاً!');
+            if (!nameValue || !timeValue) {
+                alert('الرجاء كتابة الاسم ووقت الحجز أولاً!');
                 return;
             }
 
-            bookings[roomId] = { time: timeValue };
+            bookings[roomId] = { name: nameValue, time: timeValue };
             localStorage.setItem('hallBookings', JSON.stringify(bookings));
             renderRooms();
         }
 
-        // 5. إلغاء الحجز
+        // 6. إلغاء الحجز
         function cancelBooking(roomId) {
             if (confirm('هل أنت متأكد من إلغاء حجز هذه القاعة؟')) {
                 delete bookings[roomId];
