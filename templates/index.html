@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>نظام حجز القاعات</title>
+    <style>
+        :root {
+            --bg-color: #f4f7f6;
+            --card-bg: #ffffff;
+            --text-color: #333333;
+            --primary-color: #007bff;
+            --border-color: #eee;
+        }
+
+        body.dark-theme {
+            --bg-color: #1e1e2f;
+            --card-bg: #2d2d44;
+            --text-color: #ffffff;
+            --primary-color: #4da3ff;
+            --border-color: #3d3d5c;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            transition: all 0.3s ease;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1200px;
+            margin: 0 auto 20px auto;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        .team-info {
+            font-size: 14px;
+            background: var(--card-bg);
+            padding: 10px 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        .theme-btn {
+            padding: 8px 16px;
+            cursor: pointer;
+            border-radius: 6px;
+            border: none;
+            background-color: var(--primary-color);
+            color: #fff;
+            font-weight: bold;
+        }
+
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .room-card {
+            background-color: var(--card-bg);
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .room-card img {
+            width: 100%;
+            height: 160px;
+            object-fit: cover;
+        }
+
+        .room-info {
+            padding: 15px;
+            flex-grow: 1;
+        }
+
+        .room-info h3 {
+            margin: 0 0 10px 0;
+            color: var(--primary-color);
+        }
+
+        .room-info p {
+            margin: 6px 0;
+            font-size: 14px;
+        }
+
+        .actions {
+            padding: 15px;
+            background-color: rgba(0,0,0,0.03);
+            border-top: 1px solid var(--border-color);
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 8px;
+            box-sizing: border-box;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 8px;
+            border-radius: 5px;
+            border: none;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .btn-book { background-color: #28a745; color: white; }
+        .btn-cancel { background-color: #dc3545; color: white; }
+        .btn:hover { opacity: 0.9; }
+
+        .status-badge {
+            font-weight: bold;
+            padding: 2px 8px;
+            border-radius: 4px;
+        }
+        .status-available { background: #e8f5e9; color: #2e7d32; }
+        .status-booked { background: #ffebee; color: #c62828; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div>
+            <h1>نظام حجز القاعات</h1>
+            <div class="team-info">
+                👥 <strong>فريق العمل:</strong> عبدالرحمن مهدي | زياد أبو شعفة | إياد ضامري | وسيم رفاعي
+            </div>
+        </div>
+        <button class="theme-btn" onclick="toggleTheme()">🌗 تغيير الوضع</button>
+    </header>
+
+    <div class="grid-container" id="roomsGrid"></div>
+
+    <script>
+        // 1. إدارة الثيم (الوضع الداكن/الفتح)
+        function applySavedTheme() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            if (savedTheme === 'dark') {
+                document.body.classList.add('dark-theme');
+            } else {
+                document.body.classList.remove('dark-theme');
+            }
+        }
+
+        function toggleTheme() {
+            document.body.classList.toggle('dark-theme');
+            const currentTheme = document.body.classList.contains('dark-theme') ? 'dark' : 'light';
+            localStorage.setItem('theme', currentTheme);
+        }
+
+        // 2. بيانات الـ 15 قاعة مع السعة والصورة
+        const roomsData = Array.from({ length: 15 }, (_, i) => ({
+            id: i + 1,
+            name: `قاعة رقم ${i + 1}`,
+            floor: `الطابق ${Math.floor(i / 5) + 1}`,
+            capacity: `${(i % 3 + 1) * 15} شخص`,
+            image: `https://picsum.photos/seed/hall${i + 1}/300/200`
+        }));
+
+        // 3. جلب الحجوزات من localStorage
+        let bookings = JSON.parse(localStorage.getItem('hallBookings')) || {};
+
+        function renderRooms() {
+            const grid = document.getElementById('roomsGrid');
+            grid.innerHTML = '';
+
+            roomsData.forEach(room => {
+                const bookingInfo = bookings[room.id];
+                const isBooked = !!bookingInfo;
+
+                const card = document.createElement('div');
+                card.className = 'room-card';
+                card.innerHTML = `
+                    <img src="${room.image}" alt="${room.name}">
+                    <div class="room-info">
+                        <h3>${room.name}</h3>
+                        <p>📍 <strong>الموقع:</strong> ${room.floor}</p>
+                        <p>👥 <strong>السعة:</strong> ${room.capacity}</p>
+                        <p>الحالة:
+                            <span class="status-badge ${isBooked ? 'status-booked' : 'status-available'}">
+                                ${isBooked ? 'محجوزة' : 'متاحة'}
+                            </span>
+                        </p>
+                        ${isBooked ? `<p>⏱️ <strong>الوقت:</strong> ${bookingInfo.time}</p>` : ''}
+                    </div>
+                    <div class="actions">
+                        ${!isBooked ? `
+                            <input type="text" id="time-${room.id}" placeholder="حدد وقت الحجز (مثلاً: 10 - 12 صباحاً)">
+                            <button class="btn btn-book" onclick="bookRoom(${room.id})">تأكيد الحجز</button>
+                        ` : `
+                            <button class="btn btn-cancel" onclick="cancelBooking(${room.id})">إلغاء الحجز</button>
+                        `}
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        // 4. تأكيد الحجز
+        function bookRoom(roomId) {
+            const input = document.getElementById(`time-${roomId}`);
+            const timeValue = input.value.trim();
+
+            if (!timeValue) {
+                alert('الرجاء كتابة وقت الحجز أولاً!');
+                return;
+            }
+
+            bookings[roomId] = { time: timeValue };
+            localStorage.setItem('hallBookings', JSON.stringify(bookings));
+            renderRooms();
+        }
+
+        // 5. إلغاء الحجز
+        function cancelBooking(roomId) {
+            if (confirm('هل أنت متأكد من إلغاء حجز هذه القاعة؟')) {
+                delete bookings[roomId];
+                localStorage.setItem('hallBookings', JSON.stringify(bookings));
+                renderRooms();
+            }
+        }
+
+        // تشغيل الوظائف عند التحميل
+        applySavedTheme();
+        renderRooms();
+    </script>
+</body>
+</html>
