@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>نظام حجز القاعات</title>
+    <title>نظام حجز القاعات والمعامل</title>
     <style>
         :root {
             --bg-color: #f4f7f6;
@@ -102,7 +102,7 @@
             border-top: 1px solid var(--border-color);
         }
 
-        input[type="text"] {
+        input[type="text"], select {
             width: 100%;
             padding: 8px;
             margin-bottom: 8px;
@@ -137,7 +137,7 @@
 
     <header>
         <div>
-            <h1>نظام حجز القاعات</h1>
+            <h1>نظام حجز القاعات والمعامل</h1>
             <div class="team-info">
                 👥 <strong>فريق العمل:</strong> عبدالرحمن مهدي | زياد أبو شعفة | إياد ضامري | وسيم رفاعي
             </div>
@@ -164,28 +164,22 @@
             localStorage.setItem('theme', currentTheme);
         }
 
-        // 2. صور متنوعة وحقيقية لقاعات الاجتماعات والمؤتمرات
-        const hallImages = [
-            "https://images.unsplash.com/photo-1517502884422-41eaead166d4?auto=format&fit=crop&w=600&q=80",
-            "https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=600&q=80",
-            "https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=600&q=80",
-            "https://images.unsplash.com/photo-1543269865-cbf427effbad?auto=format&fit=crop&w=600&q=80",
-            "https://images.unsplash.com/photo-1531482615713-2afd69097998?auto=format&fit=crop&w=600&q=80",
-            "https://images.unsplash.com/photo-1497215728101-856f4ea42174?auto=format&fit=crop&w=600&q=80",
-            "https://images.unsplash.com/photo-1577495508048-b635879837f1?auto=format&fit=crop&w=600&q=80",
-            "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?auto=format&fit=crop&w=600&q=80"
-        ];
+        // 2. توليد 15 عنصراً: (نصفها قاعات ونصفها معامل)
+        const roomsData = Array.from({ length: 15 }, (_, i) => {
+            const isLab = i >= 8; // أول 8 قاعات، والباقي 7 معامل
+            return {
+                id: i + 1,
+                name: isLab ? `معمل حاسب ${i - 7}` : `قاعة رقم ${i + 1}`,
+                type: isLab ? 'معمل' : 'قاعة',
+                floor: `الطابق ${Math.floor(i / 5) + 1}`,
+                capacity: `${(i % 3 + 1) * 15} شخص`,
+                image: isLab 
+                    ? "https://images.unsplash.com/photo-1562774053-701939374585?auto=format&fit=crop&w=600&q=80" // صورة معمل كمبيوتر
+                    : "https://images.unsplash.com/photo-1517502884422-41eaead166d4?auto=format&fit=crop&w=600&q=80"  // صورة قاعة اجتماعات
+            };
+        });
 
-        // 3. بيانات الـ 15 قاعة مع ربطها بصور القاعات الحقيقية
-        const roomsData = Array.from({ length: 15 }, (_, i) => ({
-            id: i + 1,
-            name: `قاعة رقم ${i + 1}`,
-            floor: `الطابق ${Math.floor(i / 5) + 1}`,
-            capacity: `${(i % 3 + 1) * 15} شخص`,
-            image: hallImages[i % hallImages.length]
-        }));
-
-        // 4. جلب الحجوزات من localStorage
+        // 3. جلب الحجوزات من localStorage
         let bookings = JSON.parse(localStorage.getItem('hallBookings')) || {};
 
         function renderRooms() {
@@ -211,13 +205,22 @@
                         </p>
                         ${isBooked ? `
                             <p>👤 <strong>المستأجر:</strong> ${bookingInfo.name}</p>
+                            <p>📅 <strong>اليوم:</strong> ${bookingInfo.day}</p>
                             <p>⏱️ <strong>الوقت:</strong> ${bookingInfo.time}</p>
                         ` : ''}
                     </div>
                     <div class="actions">
                         ${!isBooked ? `
                             <input type="text" id="name-${room.id}" placeholder="اكتب اسم المستأجر">
-                            <input type="text" id="time-${room.id}" placeholder="حدد وقت الحجز (مثلاً: 10 - 12 صباحاً)">
+                            <select id="day-${room.id}">
+                                <option value="">اختر يوم الحجز</option>
+                                <option value="الأحد">الأحد</option>
+                                <option value="الإثنين">الإثنين</option>
+                                <option value="الثلاثاء">الثلاثاء</option>
+                                <option value="الأربعاء">الأربعاء</option>
+                                <option value="الخميس">الخميس</option>
+                            </select>
+                            <input type="text" id="time-${room.id}" placeholder="حدد وقت الحجز (مثلاً: 10 - 12)">
                             <button class="btn btn-book" onclick="bookRoom(${room.id})">تأكيد الحجز</button>
                         ` : `
                             <button class="btn btn-cancel" onclick="cancelBooking(${room.id})">إلغاء الحجز</button>
@@ -228,27 +231,29 @@
             });
         }
 
-        // 5. تأكيد الحجز
+        // 4. تأكيد الحجز
         function bookRoom(roomId) {
             const nameInput = document.getElementById(`name-${roomId}`);
+            const daySelect = document.getElementById(`day-${roomId}`);
             const timeInput = document.getElementById(`time-${roomId}`);
             
             const nameValue = nameInput.value.trim();
+            const dayValue = daySelect.value;
             const timeValue = timeInput.value.trim();
 
-            if (!nameValue || !timeValue) {
-                alert('الرجاء كتابة الاسم ووقت الحجز أولاً!');
+            if (!nameValue || !dayValue || !timeValue) {
+                alert('الرجاء إدخال الاسم، اختيار يوم الأسبوع، وتحديد وقت الحجز!');
                 return;
             }
 
-            bookings[roomId] = { name: nameValue, time: timeValue };
+            bookings[roomId] = { name: nameValue, day: dayValue, time: timeValue };
             localStorage.setItem('hallBookings', JSON.stringify(bookings));
             renderRooms();
         }
 
-        // 6. إلغاء الحجز
+        // 5. إلغاء الحجز
         function cancelBooking(roomId) {
-            if (confirm('هل أنت متأكد من إلغاء حجز هذه القاعة؟')) {
+            if (confirm('هل أنت متأكد من إلغاء حجز هذه الوحدة؟')) {
                 delete bookings[roomId];
                 localStorage.setItem('hallBookings', JSON.stringify(bookings));
                 renderRooms();
